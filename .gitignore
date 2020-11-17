@@ -1,0 +1,12 @@
+# JetBrains
+.idea/
+
+# Environment variables
+.env
+
+# Data dir
+data
+
+# Composer
+composer.phar
+/vendor/
