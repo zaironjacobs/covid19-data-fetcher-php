@@ -19,7 +19,7 @@ class DataToDbSaver
     private $csvFileName;
 
     private $csvHeader = [];
-    private $csvFileRowsData = [];
+    private $csvRowsData = [];
     private $countryObjects = [];
 
     private $totalDeaths;
@@ -76,7 +76,7 @@ class DataToDbSaver
             }
             fclose($handle);
         }
-        $this->csvFileRowsData = $rowsData;
+        $this->csvRowsData = $rowsData;
     }
 
 
@@ -88,7 +88,7 @@ class DataToDbSaver
     private function getCountryNamesArray()
     {
         $countryNames = [];
-        foreach ($this->csvFileRowsData as $row) {
+        foreach ($this->csvRowsData as $row) {
             for ($i = 0; $i <= count($row); $i++) {
                 $countryColNum = array_search(COL_COUNTRY, $this->csvHeader);
                 array_push($countryNames, $row[$countryColNum]);
@@ -125,7 +125,7 @@ class DataToDbSaver
             $activeColNum = array_search(COL_ACTIVE, $this->csvHeader);
             $recoveredColNum = array_search(COL_RECOVERED, $this->csvHeader);
 
-            foreach ($this->csvFileRowsData as $rowData) {
+            foreach ($this->csvRowsData as $rowData) {
                 if ($rowData[$countryColNum] === $country->getName()) {
                     $deaths = $rowData[$deathsColNum];
                     if ($deaths < 0) {
@@ -198,10 +198,14 @@ class DataToDbSaver
      */
     private function saveDataToDb()
     {
-        $database = $_ENV["DATABASE"];
-        $collection = $_ENV["COLLECTION"];
-        $collection = (new MongoDB\Client)->$database->$collection;
+        $database_name = $_ENV["DATABASE"];
+        $collection_name = $_ENV["COLLECTION"];
+
+        $client = new MongoDB\Client($_ENV["CONNECTION_STRING"]);
+        $db = $client->$database_name;
+        $collection = $db->$collection_name;
         $collection->drop();
+
         foreach ($this->countryObjects as $country) {
             $collection->insertOne($country->toArray());
         }

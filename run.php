@@ -18,7 +18,7 @@ require("data_to_db_saver.php");
 echo "Downloading data..." . "\n";
 $dataDownloader = new DataDownloader();
 $fileName = '';
-$tries = 5;
+$tries = 30;
 for ($i = 0; $i < $tries; $i++) {
     $date = date('m-d-Y', strtotime("-" . $i . "days"));
     $fileName = $date . ".csv";
@@ -28,7 +28,7 @@ for ($i = 0; $i < $tries; $i++) {
         break;
     } else {
         if ($i === $tries - 1) {
-            echo "Could not download data from url";
+            echo "Download failed: Unable to find the latest csv file for the last " . $tries . " days";
             exit;
         }
         continue;
