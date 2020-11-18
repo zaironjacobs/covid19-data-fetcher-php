@@ -10,14 +10,17 @@
  *
  * @author      Zairon Jacobs <zaironjacobs@gmail.com>
  */
+
+use MongoDB\BSON\UTCDateTime;
+
 class Country
 {
-    private $name;
-    private $confirmed;
-    private $deaths;
-    private $active;
-    private $recovered;
-    private $last_updated_by_source_at;
+    private string $name;
+    private int $confirmed = 0;
+    private int $deaths = 0;
+    private int $active = 0;
+    private int $recovered = 0;
+    private UTCDateTime $last_updated_by_source_at;
 
     function setName($name)
     {

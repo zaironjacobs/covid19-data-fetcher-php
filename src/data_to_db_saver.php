@@ -14,18 +14,21 @@ require("country.php");
  *
  * @author      Zairon Jacobs <zaironjacobs@gmail.com>
  */
+
+use MongoDB\BSON\UTCDateTime;
+
 class DataToDbSaver
 {
-    private $csvFileName;
+    private string $csvFileName;
 
-    private $csvHeader = [];
-    private $csvRowsData = [];
-    private $countryObjects = [];
+    private array $csvHeader = [];
+    private array $csvRowsData = [];
+    private array $countryObjects = [];
 
-    private $totalDeaths;
-    private $totalActive;
-    private $totalRecovered;
-    private $totalConfirmed;
+    private int $totalDeaths = 0;
+    private int $totalActive = 0;
+    private int $totalRecovered = 0;
+    private int $totalConfirmed = 0;
 
     function __construct($fileName)
     {
@@ -52,7 +55,7 @@ class DataToDbSaver
         if (($handle = fopen(DATA_DIR . $this->csvFileName, "r")) !== FALSE) {
             while (($row = fgetcsv($handle, 1000, ",")) !== FALSE) {
                 fclose($handle);
-                $this->csvHeader = $row;
+                $this->csvHeader = (array)$row;
                 return;
             }
         }
@@ -78,7 +81,6 @@ class DataToDbSaver
         }
         $this->csvRowsData = $rowsData;
     }
-
 
     /**
      * Return an array with all country names
@@ -109,7 +111,9 @@ class DataToDbSaver
             $country = new Country();
             $country->setName($countryName);
             $country->setLastUpdatedBySourceAt($lastUpdatedBySourceTime);
-            array_push($this->countryObjects, $country);
+
+            $tmp_array = array($countryName => $country);
+            $this->countryObjects = array_merge($this->countryObjects, $tmp_array);
         }
     }
 
@@ -118,61 +122,57 @@ class DataToDbSaver
      */
     private function populateCountryObjects()
     {
-        foreach ($this->countryObjects as $country) {
-            $countryColNum = array_search(COL_COUNTRY, $this->csvHeader);
-            $deathsColNum = array_search(COL_DEATHS, $this->csvHeader);
-            $confirmedColNum = array_search(COL_CONFIRMED, $this->csvHeader);
-            $activeColNum = array_search(COL_ACTIVE, $this->csvHeader);
-            $recoveredColNum = array_search(COL_RECOVERED, $this->csvHeader);
+        $countryColNum = array_search(COL_COUNTRY, $this->csvHeader);
+        $deathsColNum = array_search(COL_DEATHS, $this->csvHeader);
+        $confirmedColNum = array_search(COL_CONFIRMED, $this->csvHeader);
+        $activeColNum = array_search(COL_ACTIVE, $this->csvHeader);
+        $recoveredColNum = array_search(COL_RECOVERED, $this->csvHeader);
 
-            foreach ($this->csvRowsData as $rowData) {
-                if ($rowData[$countryColNum] === $country->getName()) {
-                    $deaths = $rowData[$deathsColNum];
-                    if ($deaths < 0) {
-                        $deaths = abs($deaths);
-                    }
-                    $country->incrementDeaths((int)$deaths);
-                    $this->totalDeaths += (int)$deaths;
+        foreach ($this->csvRowsData as $rowData) {
+            $countryName = $rowData[$countryColNum];
 
-                    $confirmed = $rowData[$confirmedColNum];
-                    if ($confirmed < 0) {
-                        $confirmed = abs($confirmed);
-                    }
-                    $country->incrementConfirmed((int)$confirmed);
-                    $this->totalConfirmed += (int)$confirmed;
-
-                    $active = $rowData[$activeColNum];
-                    if ($active < 0) {
-                        $active = abs($active);
-                    }
-                    $country->incrementActive((int)$active);
-                    $this->totalActive += (int)$active;
-
-                    $recovered = $rowData[$recoveredColNum];
-                    if ($recovered < 0) {
-                        $recovered = abs($recovered);
-                    }
-                    $country->incrementRecovered((int)$recovered);
-                    $this->totalRecovered += (int)$recovered;
-                }
+            $deaths = $rowData[$deathsColNum];
+            if ($deaths < 0) {
+                $deaths = abs($deaths);
             }
+            $this->totalDeaths += (int)$deaths;
+
+            $confirmed = $rowData[$confirmedColNum];
+            if ($confirmed < 0) {
+                $confirmed = abs($confirmed);
+            }
+            $this->totalConfirmed += (int)$confirmed;
+
+            $active = $rowData[$activeColNum];
+            if ($active < 0) {
+                $active = abs($active);
+            }
+            $this->totalActive += (int)$active;
+
+            $recovered = $rowData[$recoveredColNum];
+            if ($recovered < 0) {
+                $recovered = abs($recovered);
+            }
+            $this->totalRecovered += (int)$recovered;
+
+            $country = $this->countryObjects[$countryName];
+            $country->incrementDeaths((int)$deaths);
+            $country->incrementConfirmed((int)$confirmed);
+            $country->incrementActive((int)$active);
+            $country->incrementRecovered((int)$recovered);
         }
 
-        foreach ($this->countryObjects as $country) {
-            if (WORLDWIDE === $country->getName()) {
-                $country->incrementDeaths((int)$this->totalDeaths);
-                $country->incrementConfirmed((int)$this->totalConfirmed);
-                $country->incrementActive((int)$this->totalActive);
-                $country->incrementRecovered((int)$this->totalRecovered);
-                break;
-            }
-        }
+        $country_worldwide = $this->countryObjects[WORLDWIDE];
+        $country_worldwide->incrementDeaths((int)$this->totalDeaths);
+        $country_worldwide->incrementConfirmed((int)$this->totalConfirmed);
+        $country_worldwide->incrementActive((int)$this->totalActive);
+        $country_worldwide->incrementRecovered((int)$this->totalRecovered);
     }
 
     /**
      * Return the last updated time of the data source
      *
-     * @return MongoDB\BSON\UTCDateTime
+     * @return UTCDateTime
      */
     private function getLastUpdatedBySourceTime()
     {
@@ -190,7 +190,7 @@ class DataToDbSaver
         $content = json_decode(file_get_contents($url, false, $context));
         $date = $content[0]->commit->committer->date;
         $dateTime = new DateTime(date('Y-m-dTh:i:s', strtotime($date)));
-        return new MongoDB\BSON\UTCDateTime($dateTime->getTimestamp() * 1000);
+        return new UTCDateTime($dateTime->getTimestamp() * 1000);
     }
 
     /**
