@@ -1,6 +1,6 @@
 {
   "name": "zairon/covid19-data-fetcher",
-  "description": "Fetch and save data of each country to a local MongoDB database",
+  "description": "Fetch and save data of each country to a MongoDB database",
   "keywords": [
     "covid19"
   ],
