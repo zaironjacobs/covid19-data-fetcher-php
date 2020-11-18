@@ -15,9 +15,10 @@ require("country.php");
  * @author      Zairon Jacobs <zaironjacobs@gmail.com>
  */
 
+
 use MongoDB\BSON\UTCDateTime;
 
-class DataToDbSaver
+class App
 {
     private string $csvFileName;
 
@@ -30,21 +31,22 @@ class DataToDbSaver
     private int $totalRecovered = 0;
     private int $totalConfirmed = 0;
 
-    function __construct($fileName)
-    {
-        $this->csvFileName = $fileName;
-    }
-
     /**
      * Main function for initialization
      */
     function init()
     {
+        echo "Downloading data..." . "\n";
+        $this->downloadCsvFile();
+
+        echo "Saving data to database..." . "\n";
         $this->setCsvHeader();
         $this->setRowsData();
         $this->createCountryObjects();
         $this->populateCountryObjects();
         $this->saveDataToDb();
+
+        echo "Finished";
     }
 
     /**
@@ -208,6 +210,45 @@ class DataToDbSaver
 
         foreach ($this->countryObjects as $country) {
             $collection->insertOne($country->toArray());
+        }
+    }
+
+    /**
+     * Download the csv file
+     */
+    private function downloadCsvFile()
+    {
+        function download(string $url)
+        {
+            if (!is_dir(DATA_DIR)) {
+                mkdir(DATA_DIR);
+            }
+
+            $file_name = basename($url);
+            $content = @file_get_contents($url);
+            if ($content === False) {
+                return False;
+            } else {
+                file_put_contents(DATA_DIR . $file_name, $content);
+                return True;
+            }
+        }
+
+        $tries = 30;
+        for ($i = 0; $i < $tries; $i++) {
+            $date = date('m-d-Y', strtotime("-" . $i . "days"));
+            $this->csvFileName = $date . ".csv";
+            $url = sprintf(DATA_URL, $this->csvFileName);
+            if (download($url) === True) {
+                echo "Download completed: " . $this->csvFileName . "\n";
+                break;
+            } else {
+                if ($i === $tries - 1) {
+                    echo "Download failed: Unable to find the latest csv file for the last " . $tries . " days";
+                    exit;
+                }
+                continue;
+            }
         }
     }
 }
