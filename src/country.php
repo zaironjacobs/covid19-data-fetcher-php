@@ -22,7 +22,7 @@ class Country
     private int $recovered = 0;
     private UTCDateTime $last_updated_by_source_at;
 
-    function setName($name)
+    function setName(string $name)
     {
         $this->name = $name;
     }
@@ -32,27 +32,27 @@ class Country
         return $this->name;
     }
 
-    function incrementConfirmed($confirmed)
+    function incrementConfirmed(int $confirmed)
     {
         $this->confirmed += $confirmed;
     }
 
-    function incrementDeaths($deaths)
+    function incrementDeaths(int $deaths)
     {
         $this->deaths += $deaths;
     }
 
-    function incrementActive($active)
+    function incrementActive(int $active)
     {
         $this->active += $active;
     }
 
-    function incrementRecovered($recovered)
+    function incrementRecovered(int $recovered)
     {
         $this->recovered += $recovered;
     }
 
-    function setLastUpdatedBySourceAt($lastUpdatedBySourceAt)
+    function setLastUpdatedBySourceAt(UTCDateTime $lastUpdatedBySourceAt)
     {
         $this->last_updated_by_source_at = $lastUpdatedBySourceAt;
     }
