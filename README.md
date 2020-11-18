@@ -36,5 +36,6 @@ To use:
 ```console
 $ cd covid19-php-data-fetcher
 $ composer install
+$ cd src
 $ php run.php
 ```

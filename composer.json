@@ -1,4 +1,9 @@
 {
+  "name": "zairon/covid19-data-fetcher",
+  "description": "Fetch and save data of each country to a local MongoDB database",
+  "keywords": [
+    "covid19"
+  ],
   "type": "project",
   "license": "MIT",
   "authors": [
@@ -8,6 +13,7 @@
     }
   ],
   "require": {
+    "php": ">=7.4",
     "vlucas/phpdotenv": "^5.2",
     "mongodb/mongodb": "^1.7",
     "ext-mongodb": "*",

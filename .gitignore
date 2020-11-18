@@ -5,7 +5,7 @@
 .env
 
 # Data dir
-data
+src/data
 
 # Composer
 composer.phar

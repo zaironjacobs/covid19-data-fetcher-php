@@ -7,9 +7,9 @@
  */
 
 
-require_once("vendor/autoload.php");
+require_once("../vendor/autoload.php");
 
-Dotenv\Dotenv::createImmutable(__DIR__)->load();
+Dotenv\Dotenv::createImmutable(dirname(__DIR__, 1))->load();
 
 require("constants.php");
 require("data_downloader.php");
