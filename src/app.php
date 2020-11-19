@@ -11,7 +11,7 @@ require("country.php");
 require("mongodb.php");
 
 /**
- * Save data from the downloaded csv file inside the data dir to a local MongoDB database
+ * Save data from the downloaded csv file inside the data dir to a MongoDB database
  *
  * @author      Zairon Jacobs <zaironjacobs@gmail.com>
  */
@@ -204,7 +204,7 @@ class App
     }
 
     /**
-     * Save each country object to a local MongoDB database
+     * Save each country object to a MongoDB database
      */
     private function saveDataToDb()
     {
