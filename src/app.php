@@ -46,7 +46,7 @@ class App
         $this->populateCountryObjects();
         $this->saveDataToDb();
 
-        echo "Finished";
+        echo "Finished" . "\n";
     }
 
     /**
