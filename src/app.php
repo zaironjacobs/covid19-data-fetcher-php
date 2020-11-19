@@ -8,6 +8,7 @@
 
 
 require("country.php");
+require("mongodb.php");
 
 /**
  * Save data from the downloaded csv file inside the data dir to a local MongoDB database
@@ -30,6 +31,13 @@ class App
     private int $totalActive = 0;
     private int $totalRecovered = 0;
     private int $totalConfirmed = 0;
+
+    private MongoDatabase $mongoDatabase;
+
+    function __construct()
+    {
+        $this->mongoDatabase = new MongoDatabase();
+    }
 
     /**
      * Main function for initialization
@@ -200,16 +208,9 @@ class App
      */
     private function saveDataToDb()
     {
-        $database_name = $_ENV["DATABASE"];
-        $collection_name = $_ENV["COLLECTION"];
-
-        $client = new MongoDB\Client($_ENV["CONNECTION_STRING"]);
-        $db = $client->$database_name;
-        $collection = $db->$collection_name;
-        $collection->drop();
-
+        $this->mongoDatabase->dropCollection();
         foreach ($this->countryObjects as $country) {
-            $collection->insertOne($country->toArray());
+            $this->mongoDatabase->insert($country->toArray());
         }
     }
 
