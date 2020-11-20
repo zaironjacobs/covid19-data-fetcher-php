@@ -84,8 +84,6 @@ class App
      */
     private function downloadCsvFile()
     {
-
-
         $tries = 90;
         for ($i = 0; $i < $tries; $i++) {
             $date = date('m-d-Y', strtotime("-" . $i . "days"));
