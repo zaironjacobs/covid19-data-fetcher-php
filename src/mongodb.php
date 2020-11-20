@@ -39,7 +39,7 @@ class MongoDatabase
     }
 
     /**
-     * Drop the collection
+     * Drop the collection from the MongoDB database
      */
     function dropCollection()
     {
