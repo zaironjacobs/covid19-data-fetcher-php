@@ -24,7 +24,7 @@ class App
     private string $csvFileName;
 
     private array $csvHeader = [];
-    private array $csvRowsData = [];
+    private array $csvRows = [];
     private array $countryObjects = [];
 
     private int $totalDeaths = 0;
@@ -55,6 +55,88 @@ class App
         $this->saveDataToDb();
 
         echo "Finished" . "\n";
+    }
+
+    /**
+     * Download any file to the data dir
+     *
+     * @param string $url
+     * @return bool
+     */
+    private function download(string $url)
+    {
+        if (!is_dir(DATA_DIR)) {
+            mkdir(DATA_DIR);
+        }
+
+        $file_name = basename($url);
+        $content = @file_get_contents($url);
+        if ($content === False) {
+            return False;
+        } else {
+            file_put_contents(DATA_DIR . $file_name, $content);
+            return True;
+        }
+    }
+
+    /**
+     * Download the csv file
+     */
+    private function downloadCsvFile()
+    {
+
+
+        $tries = 90;
+        for ($i = 0; $i < $tries; $i++) {
+            $date = date('m-d-Y', strtotime("-" . $i . "days"));
+            $this->csvFileName = $date . ".csv";
+            $url = sprintf(DATA_URL, $this->csvFileName);
+            if ($this->download($url) === True) {
+                echo "Download completed: " . $this->csvFileName . "\n";
+                break;
+            } else {
+                if ($i === $tries - 1) {
+                    echo "Download failed: Unable to find the latest csv file for the last " . $tries . " days";
+                    exit;
+                }
+                continue;
+            }
+        }
+    }
+
+    /**
+     * Return an array with all country names
+     *
+     * @return array
+     */
+    private function getCountryNamesArray()
+    {
+        $countryNames = [];
+        foreach ($this->csvRows as $row) {
+            for ($i = 0; $i <= count($row); $i++) {
+                $countryColNum = array_search(COL_COUNTRY, $this->csvHeader);
+                array_push($countryNames, $row[$countryColNum]);
+            }
+        }
+        array_push($countryNames, WORLDWIDE);
+        return array_unique($countryNames);
+    }
+
+    /**
+     * Create country objects of all countries
+     */
+    private function createCountryObjects()
+    {
+        $lastUpdatedBySourceTime = $this->getLastUpdatedBySourceTime();
+        $countryNames = $this->getCountryNamesArray();
+        foreach ($countryNames as $countryName) {
+            $country = new Country();
+            $country->setName($countryName);
+            $country->setLastUpdatedBySourceAt($lastUpdatedBySourceTime);
+
+            $tmp_array = array($countryName => $country);
+            $this->countryObjects = array_merge($this->countryObjects, $tmp_array);
+        }
     }
 
     /**
@@ -89,42 +171,7 @@ class App
             }
             fclose($handle);
         }
-        $this->csvRowsData = $rowsData;
-    }
-
-    /**
-     * Return an array with all country names
-     *
-     * @return array
-     */
-    private function getCountryNamesArray()
-    {
-        $countryNames = [];
-        foreach ($this->csvRowsData as $row) {
-            for ($i = 0; $i <= count($row); $i++) {
-                $countryColNum = array_search(COL_COUNTRY, $this->csvHeader);
-                array_push($countryNames, $row[$countryColNum]);
-            }
-        }
-        array_push($countryNames, WORLDWIDE);
-        return array_unique($countryNames);
-    }
-
-    /**
-     * Create country objects of all countries
-     */
-    private function createCountryObjects()
-    {
-        $lastUpdatedBySourceTime = $this->getLastUpdatedBySourceTime();
-        $countryNames = $this->getCountryNamesArray();
-        foreach ($countryNames as $countryName) {
-            $country = new Country();
-            $country->setName($countryName);
-            $country->setLastUpdatedBySourceAt($lastUpdatedBySourceTime);
-
-            $tmp_array = array($countryName => $country);
-            $this->countryObjects = array_merge($this->countryObjects, $tmp_array);
-        }
+        $this->csvRows = $rowsData;
     }
 
     /**
@@ -138,7 +185,7 @@ class App
         $activeColNum = array_search(COL_ACTIVE, $this->csvHeader);
         $recoveredColNum = array_search(COL_RECOVERED, $this->csvHeader);
 
-        foreach ($this->csvRowsData as $rowData) {
+        foreach ($this->csvRows as $rowData) {
             $countryName = $rowData[$countryColNum];
 
             $deaths = $rowData[$deathsColNum];
@@ -180,26 +227,20 @@ class App
     }
 
     /**
-     * Return the last updated time of the data source
+     * Return the last updated time of the data
      *
      * @return UTCDateTime
      */
     private function getLastUpdatedBySourceTime()
     {
-        $url = sprintf(DATA_URL_INFO, $this->csvFileName);
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => [
-                    'User-Agent: PHP'
-                ]
-            ]
-        ];
-
-        $context = stream_context_create($opts);
-        $content = json_decode(file_get_contents($url, false, $context));
-        $date = $content[0]->commit->committer->date;
-        $dateTime = new DateTime(date('Y-m-dTh:i:s', strtotime($date)));
+        $lastUpdateColNum = array_search(COL_LAST_UPDATE, $this->csvHeader);
+        $dateString = $this->csvRows[0][$lastUpdateColNum];
+        try {
+            $dateTime = new DateTime(date('Y-m-dTh:i:s', strtotime($dateString)));
+        } catch (Exception $e) {
+            echo "Error retrieving the last updated time of the data";
+            exit;
+        }
         return new UTCDateTime($dateTime->getTimestamp() * 1000);
     }
 
@@ -214,42 +255,5 @@ class App
         }
     }
 
-    /**
-     * Download the csv file
-     */
-    private function downloadCsvFile()
-    {
-        function download(string $url)
-        {
-            if (!is_dir(DATA_DIR)) {
-                mkdir(DATA_DIR);
-            }
-
-            $file_name = basename($url);
-            $content = @file_get_contents($url);
-            if ($content === False) {
-                return False;
-            } else {
-                file_put_contents(DATA_DIR . $file_name, $content);
-                return True;
-            }
-        }
-
-        $tries = 30;
-        for ($i = 0; $i < $tries; $i++) {
-            $date = date('m-d-Y', strtotime("-" . $i . "days"));
-            $this->csvFileName = $date . ".csv";
-            $url = sprintf(DATA_URL, $this->csvFileName);
-            if (download($url) === True) {
-                echo "Download completed: " . $this->csvFileName . "\n";
-                break;
-            } else {
-                if ($i === $tries - 1) {
-                    echo "Download failed: Unable to find the latest csv file for the last " . $tries . " days";
-                    exit;
-                }
-                continue;
-            }
-        }
-    }
 }
+
