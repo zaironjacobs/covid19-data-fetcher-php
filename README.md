@@ -20,7 +20,7 @@ An example of a document:
 ```
 
 ## Dependencies
-- PHP >= 7.4
+- [PHP >= 7.4](https://www.php.net/downloads.php)
 - [MongoDB PHP Driver](https://pecl.php.net/package/mongodb)
 
 ## Download
