@@ -10,15 +10,13 @@
 require("country.php");
 require("mongodb.php");
 
+use MongoDB\BSON\UTCDateTime;
+
 /**
  * Save data from the downloaded csv file inside the data dir to a MongoDB database
  *
  * @author      Zairon Jacobs <zaironjacobs@gmail.com>
  */
-
-
-use MongoDB\BSON\UTCDateTime;
-
 class App
 {
     private string $csvFileName;
