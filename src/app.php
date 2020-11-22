@@ -181,31 +181,28 @@ class App
         $activeColNum = array_search(COL_ACTIVE, $this->csvHeader);
         $recoveredColNum = array_search(COL_RECOVERED, $this->csvHeader);
 
+        function getCaseCount($rowData, $colNum)
+        {
+            $case = $rowData[$colNum];
+            if ($case < 0) {
+                $case = abs($case);
+            }
+            return $case;
+        }
+
         foreach ($this->csvRows as $rowData) {
             $countryName = $rowData[$countryColNum];
 
-            $deaths = $rowData[$deathsColNum];
-            if ($deaths < 0) {
-                $deaths = abs($deaths);
-            }
+            $deaths = getCaseCount($rowData, $deathsColNum);
             $this->totalDeaths += (int)$deaths;
 
-            $confirmed = $rowData[$confirmedColNum];
-            if ($confirmed < 0) {
-                $confirmed = abs($confirmed);
-            }
+            $confirmed = getCaseCount($rowData, $confirmedColNum);
             $this->totalConfirmed += (int)$confirmed;
 
-            $active = $rowData[$activeColNum];
-            if ($active < 0) {
-                $active = abs($active);
-            }
+            $active = getCaseCount($rowData, $activeColNum);
             $this->totalActive += (int)$active;
 
-            $recovered = $rowData[$recoveredColNum];
-            if ($recovered < 0) {
-                $recovered = abs($recovered);
-            }
+            $recovered = getCaseCount($rowData, $recoveredColNum);
             $this->totalRecovered += (int)$recovered;
 
             $country = $this->countryObjects[$countryName];
