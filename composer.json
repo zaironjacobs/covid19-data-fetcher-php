@@ -12,6 +12,11 @@
       "email": "zaironjacobs@gmail.com"
     }
   ],
+  "scripts": {
+    "start": [
+      "cd src && php run.php"
+    ]
+  },
   "require": {
     "php": ">=7.4",
     "vlucas/phpdotenv": "^5.2",
