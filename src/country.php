@@ -27,7 +27,7 @@ class Country
         $this->name = $name;
     }
 
-    function getName()
+    function getName(): string
     {
         return $this->name;
     }
@@ -57,7 +57,7 @@ class Country
         $this->last_updated_by_source_at = $lastUpdatedBySourceAt;
     }
 
-    public function toArray()
+    public function toArray(): array
     {
         return get_object_vars($this);
     }

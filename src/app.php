@@ -61,19 +61,26 @@ class App
      * @param string $url
      * @return bool
      */
-    private function download(string $url)
+    private function download(string $url): bool
     {
-        if (!is_dir(DATA_DIR)) {
-            mkdir(DATA_DIR);
+        if (is_dir(DATA_DIR)) {
+            $files = glob(DATA_DIR . '/*');
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+            rmdir(DATA_DIR);
         }
+        mkdir(DATA_DIR);
 
         $file_name = basename($url);
         $content = @file_get_contents($url);
-        if ($content === False) {
-            return False;
+        if ($content === FALSE) {
+            return FALSE;
         } else {
             file_put_contents(DATA_DIR . $file_name, $content);
-            return True;
+            return TRUE;
         }
     }
 
@@ -87,7 +94,7 @@ class App
             $date = date('m-d-Y', strtotime("-" . $i . "days"));
             $this->csvFileName = $date . ".csv";
             $url = sprintf(DATA_URL, $this->csvFileName);
-            if ($this->download($url) === True) {
+            if ($this->download($url) === TRUE) {
                 echo "Download completed: " . $this->csvFileName . "\n";
                 break;
             } else {
@@ -105,7 +112,7 @@ class App
      *
      * @return array
      */
-    private function getCountryNamesArray()
+    private function getCountryNamesArray(): array
     {
         $countryNames = [];
         foreach ($this->csvRows as $row) {
@@ -141,11 +148,11 @@ class App
     private function setCsvHeader()
     {
         if (($handle = fopen(DATA_DIR . $this->csvFileName, "r")) !== FALSE) {
-            while (($row = fgetcsv($handle, 1000, ",")) !== FALSE) {
-                fclose($handle);
-                $this->csvHeader = (array)$row;
-                return;
-            }
+            $row = fgetcsv($handle);
+            $this->csvHeader = (array)$row;
+            fclose($handle);
+        } else {
+            die("Error reading the csv file's header");
         }
     }
 
@@ -157,7 +164,7 @@ class App
         $rowsData = [];
         if (($handle = fopen(DATA_DIR . $this->csvFileName, "r")) !== FALSE) {
             $counter = 0;
-            while (($row = fgetcsv($handle, 1000, ",")) !== FALSE) {
+            while (($row = fgetcsv($handle, 1000)) !== FALSE) {
                 if ($counter === 0) {
                     $counter++;
                     continue;
@@ -224,7 +231,7 @@ class App
      *
      * @return UTCDateTime
      */
-    private function getLastUpdatedBySourceTime()
+    private function getLastUpdatedBySourceTime(): UTCDateTime
     {
         $lastUpdateColNum = array_search(COL_LAST_UPDATE, $this->csvHeader);
         $dateString = $this->csvRows[0][$lastUpdateColNum];
