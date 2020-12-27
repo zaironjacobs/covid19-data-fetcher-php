@@ -44,3 +44,10 @@ $ cd covid19-data-fetcher-php
 $ composer install
 $ composer run-script start
 ```
+
+## Crontab
+At minute 0 and 30:
+
+```
+0,30 * * * * cd ~/covid19-data-fetcher-php && /usr/local/bin/composer run-script start
+```
