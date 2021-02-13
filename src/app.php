@@ -99,7 +99,6 @@ class App
             $this->csvFileName = $date . ".csv";
             $url = sprintf(DATA_URL, $this->csvFileName);
             if ($this->download($url) === TRUE) {
-                echo "Download completed: " . $this->csvFileName . "\n";
                 break;
             } else {
                 if ($i === $tries - 1) {
@@ -254,15 +253,58 @@ class App
     private function fetchNews()
     {
         $url = sprintf(NEWS_API_URL, $_ENV["NEWS_API_KEY"], $_ENV["NEWS_PAGE_SIZE"]);
-        $newsData = json_decode(file_get_contents($url));
-        foreach ($newsData->articles as $news) {
+        $articles = json_decode(file_get_contents($url))->articles;
+        foreach ($articles as $article) {
             $newsObj = new News();
-            $newsObj->setTitle($news->title);
-            $newsObj->setSourceName($news->source->name);
-            $newsObj->setAuthor($news->author);
-            $newsObj->setDescription($news->description);
-            $newsObj->setUrl($news->url);
-            $newsObj->setPublishedAt(new UTCDateTime(strtotime($news->publishedAt)));
+
+            if (is_null($article->title)) {
+                $title = '-';
+            } else {
+                $title = $article->title;
+            }
+            $newsObj->setTitle($title);
+
+            if (is_null($article->source->name)) {
+                $sourceName = '-';
+            } else {
+                $sourceName = $article->source->name;
+            }
+            $newsObj->setSourceName($sourceName);
+
+            if (is_null($article->author)) {
+                $author = '-';
+            } else {
+                $author = $article->author;
+            }
+            $newsObj->setAuthor($author);
+
+            if (is_null($article->description)) {
+                $description = '-';
+            } else {
+                $description = $article->description;
+            }
+            $newsObj->setDescription($description);
+
+            if (is_null($article->url)) {
+                $url = '-';
+            } else {
+                $url = $article->url;
+            }
+            $newsObj->setUrl($url);
+
+            if (is_null($article->publishedAt)) {
+                $publishedAt = '-';
+            } else {
+                $publishedAt = $article->publishedAt;
+            }
+            try {
+                $dateTime = new DateTime(date('Y-m-dTh:i:s', strtotime($publishedAt)));
+            } catch (Exception $e) {
+                echo "Error retrieving the article date";
+                exit;
+            }
+            $newsObj->setPublishedAt(new UTCDateTime($dateTime->getTimestamp() * 1000));
+
             array_push($this->newsObjects, $newsObj);
         }
     }
