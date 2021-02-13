@@ -257,46 +257,37 @@ class App
         foreach ($articles as $article) {
             $newsObj = new News();
 
-            if (is_null($article->title)) {
-                $title = '-';
-            } else {
+            $title = '-';
+            if (!is_null($article->title)) {
                 $title = $article->title;
             }
             $newsObj->setTitle($title);
 
-            if (is_null($article->source->name)) {
-                $sourceName = '-';
-            } else {
+            $sourceName = '-';
+            if (!is_null($article->source->name)) {
                 $sourceName = $article->source->name;
             }
             $newsObj->setSourceName($sourceName);
 
-            if (is_null($article->author)) {
-                $author = '-';
-            } else {
+            $author = '-';
+            if (!is_null($article->author)) {
                 $author = $article->author;
             }
             $newsObj->setAuthor($author);
 
-            if (is_null($article->description)) {
-                $description = '-';
-            } else {
+            $description = '-';
+            if (!is_null($article->description)) {
                 $description = $article->description;
             }
             $newsObj->setDescription($description);
 
-            if (is_null($article->url)) {
-                $url = '-';
-            } else {
+            $url = '-';
+            if (!is_null($article->url)) {
                 $url = $article->url;
             }
             $newsObj->setUrl($url);
 
-            if (is_null($article->publishedAt)) {
-                $publishedAt = '-';
-            } else {
-                $publishedAt = $article->publishedAt;
-            }
+            $publishedAt = $article->publishedAt;
             try {
                 $dateTime = new DateTime(date('Y-m-dTh:i:s', strtotime($publishedAt)));
             } catch (Exception $e) {
