@@ -16,33 +16,53 @@ use MongoDB\Collection;
  */
 class MongoDatabase
 {
-    private Collection $collection;
+    private Collection $countryCollection;
+    private Collection $newsCollection;
 
     function __construct()
     {
         $database_name = $_ENV["DATABASE"];
-        $collection_name = $_ENV["COLLECTION"];
-
+        $collection_country = $_ENV["COLLECTION_COUNTRY"];
+        $collection_news = $_ENV["COLLECTION_NEWS"];
         $client = new Client($_ENV["CONNECTION_STRING"]);
         $db = $client->$database_name;
-        $this->collection = $db->$collection_name;
+        $this->countryCollection = $db->$collection_country;
+        $this->newsCollection = $db->$collection_news;
     }
 
     /**
-     * Insert data into the collection
+     * Insert data into the country collection
      *
      * @param array $data
      */
-    function insert(array $data)
+    function insertCountry(array $data)
     {
-        $this->collection->insertOne($data);
+        $this->countryCollection->insertOne($data);
     }
 
     /**
-     * Drop the collection from the MongoDB database
+     * Insert data into the news collection
+     *
+     * @param array $data
      */
-    function dropCollection()
+    function insertNews(array $data)
     {
-        $this->collection->drop();
+        $this->newsCollection->insertOne($data);
+    }
+
+    /**
+     * Drop the country collection from the MongoDB database
+     */
+    function dropCountryCollection()
+    {
+        $this->countryCollection->drop();
+    }
+
+    /**
+     * Drop the news collection from the MongoDB database
+     */
+    function dropNewsCollection()
+    {
+        $this->newsCollection->drop();
     }
 }

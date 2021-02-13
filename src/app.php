@@ -7,7 +7,8 @@
  */
 
 
-require("country.php");
+require("models/country.php");
+require("models/news.php");
 require("mongo_database.php");
 
 use MongoDB\BSON\UTCDateTime;
@@ -24,6 +25,7 @@ class App
     private array $csvHeader = [];
     private array $csvRows = [];
     private array $countryObjects = [];
+    private array $newsObjects = [];
 
     private int $totalDeaths = 0;
     private int $totalActive = 0;
@@ -44,13 +46,15 @@ class App
     {
         echo "Downloading data..." . "\n";
         $this->downloadCsvFile();
+        $this->fetchNews();
 
         echo "Saving data to database..." . "\n";
         $this->setCsvHeader();
         $this->setRowsData();
         $this->createCountryObjects();
         $this->populateCountryObjects();
-        $this->saveDataToDb();
+        $this->saveNewsDataToDb();
+        $this->saveCountryDataToDb();
 
         echo "Finished" . "\n";
     }
@@ -245,15 +249,44 @@ class App
     }
 
     /**
-     * Save each country object to a MongoDB database
+     * Fetch news and save it to an array
      */
-    private function saveDataToDb()
+    private function fetchNews()
     {
-        $this->mongoDatabase->dropCollection();
-        foreach ($this->countryObjects as $country) {
-            $this->mongoDatabase->insert($country->toArray());
+        $url = sprintf(NEWS_API_URL, $_ENV["NEWS_API_KEY"], $_ENV["NEWS_PAGE_SIZE"]);
+        $newsData = json_decode(file_get_contents($url));
+        foreach ($newsData->articles as $news) {
+            $newsObj = new News();
+            $newsObj->setTitle($news->title);
+            $newsObj->setSourceName($news->source->name);
+            $newsObj->setAuthor($news->author);
+            $newsObj->setDescription($news->description);
+            $newsObj->setUrl($news->url);
+            $newsObj->setPublishedAt(new UTCDateTime(strtotime($news->publishedAt)));
+            array_push($this->newsObjects, $newsObj);
         }
     }
 
+    /**
+     * Save each country object to a MongoDB database
+     */
+    private function saveCountryDataToDb()
+    {
+        $this->mongoDatabase->dropCountryCollection();
+        foreach ($this->countryObjects as $country) {
+            $this->mongoDatabase->insertCountry($country->toArray());
+        }
+    }
+
+    /**
+     * Save each news object to a MongoDB database
+     */
+    private function saveNewsDataToDb()
+    {
+        $this->mongoDatabase->dropNewsCollection();
+        foreach ($this->newsObjects as $news) {
+            $this->mongoDatabase->insertNews($news->toArray());
+        }
+    }
 }
 
