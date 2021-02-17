@@ -17,17 +17,17 @@ use MongoDB\Collection;
 class MongoDatabase
 {
     private Collection $countryCollection;
-    private Collection $newsCollection;
+    private Collection $articleCollection;
 
     function __construct()
     {
         $database_name = $_ENV["DATABASE"];
         $collection_country = $_ENV["COLLECTION_COUNTRY"];
-        $collection_news = $_ENV["COLLECTION_NEWS"];
+        $collection_article = $_ENV["COLLECTION_ARTICLE"];
         $client = new Client($_ENV["CONNECTION_STRING"]);
         $db = $client->$database_name;
         $this->countryCollection = $db->$collection_country;
-        $this->newsCollection = $db->$collection_news;
+        $this->articleCollection = $db->$collection_article;
     }
 
     /**
@@ -41,13 +41,13 @@ class MongoDatabase
     }
 
     /**
-     * Insert data into the news collection
+     * Insert data into the article collection
      *
      * @param array $data
      */
-    function insertNews(array $data)
+    function insertArticle(array $data)
     {
-        $this->newsCollection->insertOne($data);
+        $this->articleCollection->insertOne($data);
     }
 
     /**
@@ -59,10 +59,10 @@ class MongoDatabase
     }
 
     /**
-     * Drop the news collection from the MongoDB database
+     * Drop the article collection from the MongoDB database
      */
-    function dropNewsCollection()
+    function dropArticleCollection()
     {
-        $this->newsCollection->drop();
+        $this->articleCollection->drop();
     }
 }

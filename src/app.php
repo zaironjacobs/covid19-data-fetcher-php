@@ -8,14 +8,14 @@
 
 
 require("models/country.php");
-require("models/news.php");
+require("models/article.php");
 require("mongo_database.php");
 
 use MongoDB\BSON\UTCDateTime;
 
 /**
  * Fetch and save data of each country to a MongoDB database.
- * Fetch and save news related to COVID-19 to a MongoDB database.
+ * Fetch and save articles related to COVID-19 to a MongoDB database.
  *
  * @author      Zairon Jacobs <zaironjacobs@gmail.com>
  */
@@ -26,7 +26,7 @@ class App
     private array $csvHeader = [];
     private array $csvRows = [];
     private array $countryObjects = [];
-    private array $newsObjects = [];
+    private array $articleObjects = [];
 
     private int $totalDeaths = 0;
     private int $totalActive = 0;
@@ -47,14 +47,14 @@ class App
     {
         echo "Downloading data..." . "\n";
         $this->downloadCsvFile();
-        $this->fetchNews();
+        $this->fetchArticles();
 
         echo "Saving data to database..." . "\n";
         $this->setCsvHeader();
         $this->setRowsData();
         $this->createCountryObjects();
         $this->populateCountryObjects();
-        $this->saveNewsDataToDb();
+        $this->saveArticleDataToDb();
         $this->saveCountryDataToDb();
 
         echo "Finished" . "\n";
@@ -249,44 +249,44 @@ class App
     }
 
     /**
-     * Fetch news and save it to an array
+     * Fetch articles and save them to an array
      */
-    private function fetchNews()
+    private function fetchArticles()
     {
         $url = sprintf(NEWS_API_URL, $_ENV["NEWS_API_KEY"], $_ENV["NEWS_PAGE_SIZE"]);
         $articles = json_decode(file_get_contents($url))->articles;
         foreach ($articles as $article) {
-            $newsObj = new News();
+            $articleObj = new Article();
 
             $title = '-';
             if (!is_null($article->title)) {
                 $title = $article->title;
             }
-            $newsObj->setTitle($title);
+            $articleObj->setTitle($title);
 
             $sourceName = '-';
             if (!is_null($article->source->name)) {
                 $sourceName = $article->source->name;
             }
-            $newsObj->setSourceName($sourceName);
+            $articleObj->setSourceName($sourceName);
 
             $author = '-';
             if (!is_null($article->author)) {
                 $author = $article->author;
             }
-            $newsObj->setAuthor($author);
+            $articleObj->setAuthor($author);
 
             $description = '-';
             if (!is_null($article->description)) {
                 $description = $article->description;
             }
-            $newsObj->setDescription($description);
+            $articleObj->setDescription($description);
 
             $url = '-';
             if (!is_null($article->url)) {
                 $url = $article->url;
             }
-            $newsObj->setUrl($url);
+            $articleObj->setUrl($url);
 
             $publishedAt = $article->publishedAt;
             try {
@@ -295,9 +295,9 @@ class App
                 echo "Error retrieving the article date";
                 exit;
             }
-            $newsObj->setPublishedAt(new UTCDateTime($dateTime->getTimestamp() * 1000));
+            $articleObj->setPublishedAt(new UTCDateTime($dateTime->getTimestamp() * 1000));
 
-            array_push($this->newsObjects, $newsObj);
+            array_push($this->articleObjects, $articleObj);
         }
     }
 
@@ -313,13 +313,13 @@ class App
     }
 
     /**
-     * Save each news object to a MongoDB database
+     * Save each article object to a MongoDB database
      */
-    private function saveNewsDataToDb()
+    private function saveArticleDataToDb()
     {
-        $this->mongoDatabase->dropNewsCollection();
-        foreach ($this->newsObjects as $news) {
-            $this->mongoDatabase->insertNews($news->toArray());
+        $this->mongoDatabase->dropArticleCollection();
+        foreach ($this->articleObjects as $article) {
+            $this->mongoDatabase->insertArticle($article->toArray());
         }
     }
 }

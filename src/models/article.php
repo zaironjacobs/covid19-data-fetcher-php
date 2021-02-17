@@ -6,14 +6,14 @@
  */
 
 /**
- * News class to store news data
+ * Article class to store article data
  *
  * @author      Zairon Jacobs <zaironjacobs@gmail.com>
  */
 
 use MongoDB\BSON\UTCDateTime;
 
-class News
+class Article
 {
     private string $title;
     private string $source_name;
