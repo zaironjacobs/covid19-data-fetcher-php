@@ -196,7 +196,7 @@ class App
         {
             $case = $rowData[$colNum];
             if ($case < 0) {
-                $case = abs($case);
+                $case = abs(intval($case));
             }
             return $case;
         }
